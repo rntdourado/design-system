@@ -1,6 +1,6 @@
 {
     "name": "cardban-ui-kit",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "author": "Renato Dourado",
     "main": "dist/index.js",
     "license": "MIT",
