@@ -1,62 +1,181 @@
-# Monorepo with Lerna & Yarn Workspaces
+# TSDX React w/ Storybook User Guide
 
-> A Monorepo with multiple packages and a shared build, test, and release process.
+Congrats! You just saved yourself hours of work by bootstrapping this project with TSDX. Let’s get you oriented with what’s here and how to use it.
 
-View example ➡️ https://storybook-monorepo.now.sh/
+> This TSDX setup is meant for developing React component libraries (not apps!) that can be published to NPM. If you’re looking to build a React-based app, you should use `create-react-app`, `razzle`, `nextjs`, `gatsby`, or `react-static`.
 
-![image](https://user-images.githubusercontent.com/9113740/71946241-d9f43a00-318e-11ea-80c4-72c483b88325.png)
+> If you’re new to TypeScript and React, checkout [this handy cheatsheet](https://github.com/sw-yx/react-typescript-cheatsheet/)
 
--   🐉 [Lerna](https://lernajs.io/)  - The Monorepo manager
--   📦 [Yarn Workspaces](https://yarnpkg.com/lang/en/docs/workspaces/)  -  Sane multi-package management
--   🚀 [React](https://reactjs.org/)  -  JavaScript library for user interfaces
--   💅 [styled-components](https://www.styled-components.com/)  -  CSS in JS elegance
--   🛠 [Babel](https://babeljs.io/)  -  Compiles next-gen JavaScript
--   📖 [Storybook](https://storybook.js.org/) - UI Component Environment
--   🃏 [Jest](https://jestjs.io/)  -  Unit/Snapshot Testing
+## Commands
 
-## Usage
+TSDX scaffolds your new library inside `/src`, and also sets up a [Parcel-based](https://parceljs.org) playground for it inside `/example`.
 
--   `yarn dev` - This starts Storybook for viewing all the components locally.
--   `yarn bootstrap` - This installs all of the packages and links dependent packages together.
--   `yarn build` - This babelfies all of the packages and creates `/lib` folders for each one.
--   `yarn test` - Run all linting and unit tests before committing.
--   `yarn test -o` - Run only the tests that have changed.
--   `yarn test -u` - Update all of the snapshot tests.
+The recommended workflow is to run TSDX in one terminal:
 
-## Lerna
-
--   `lerna changed` - Show which packages have changed.
--   `lerna diff` - Show specifically what files have cause the packages to change.
-
-## Linking
-
-When linking inside of the Monorepo, everything works as expected. If you are trying to consume packages from this Monorepo _in a different application_ locally, using `npm link` or `yarn link` [does not work as expected](https://github.com/yarnpkg/yarn/issues/5538). However, we have a workaround for the time being.
-
-1. Run `yarn build`
-1. Run `yarn dev`
-1. Change the `package.json` of the consumer from `$YOUR_PACKAGE_NAME` (which lives inside the monorepo) to `file:./../monorepo/packages/$YOUR_PACKAGE_NAME`
-1. Run `rm -rf node_modules && yarn` in the consumer
-1. 🎉
-
-## Contributing
-
-All formatting and linting should be taken care of for you using [stylelint](https://github.com/stylelint/stylelint), [ESLint](https://eslint.org/), and [Prettier](https://prettier.io/). You should also consider installing an extension for CSS syntax highlighting.
-
--   [vscode-styled-components](https://marketplace.visualstudio.com/items?itemName=jpoissonnier.vscode-styled-components)
--   [webstorm-styled-components](https://github.com/styled-components/webstorm-styled-components)
--   [Other IDEs](https://www.styled-components.com/docs/tooling#syntax-highlighting)
-
-## FAQ
-
-### Why the limitation on yarn versions?
-
-[It's a known issue](https://github.com/yarnpkg/yarn/issues/7807) that yarn workspaces using yarn versions > `1.18.0` can produce the following false positive error message when adding or updating dependencies in packages.
-
-```
-error An unexpected error occurred: "expected workspace package to exist for "XXX".
+```bash
+npm start # or yarn start
 ```
 
-To guard against this, we've:
+This builds to `/dist` and runs the project in watch mode so any edits you save inside `src` causes a rebuild to `/dist`.
 
--   Changed `package.json` to enforce a yarn version range.
--   Added a `.yvmrc` file, so if you're using [yvm](https://yvm.js.org/docs/overview) to manage your yarn versions (like [nvm](https://github.com/nvm-sh/nvm) for node version), it'll pick up the yarn version automatically.
+Then run either Storybook or the example playground:
+
+### Storybook
+
+Run inside another terminal:
+
+```bash
+yarn storybook
+```
+
+This loads the stories from `./stories`.
+
+> NOTE: Stories should reference the components as if using the library, similar to the example playground. This means importing from the root project directory. This has been aliased in the tsconfig and the storybook webpack config as a helper.
+
+### Example
+
+Then run the example inside another:
+
+```bash
+cd example
+npm i # or yarn to install dependencies
+npm start # or yarn start
+```
+
+The default example imports and live reloads whatever is in `/dist`, so if you are seeing an out of date component, make sure TSDX is running in watch mode like we recommend above. **No symlinking required**, we use [Parcel's aliasing](https://parceljs.org/module_resolution.html#aliases).
+
+To do a one-off build, use `npm run build` or `yarn build`.
+
+To run tests, use `npm test` or `yarn test`.
+
+## Configuration
+
+Code quality is set up for you with `prettier`, `husky`, and `lint-staged`. Adjust the respective fields in `package.json` accordingly.
+
+### Jest
+
+Jest tests are set up to run with `npm test` or `yarn test`.
+
+### Bundle analysis
+
+Calculates the real cost of your library using [size-limit](https://github.com/ai/size-limit) with `npm run size` and visulize it with `npm run analyze`.
+
+#### Setup Files
+
+This is the folder structure we set up for you:
+
+```txt
+/example
+  index.html
+  index.tsx       # test your component here in a demo app
+  package.json
+  tsconfig.json
+/src
+  index.tsx       # EDIT THIS
+/test
+  blah.test.tsx   # EDIT THIS
+/stories
+  Thing.stories.tsx # EDIT THIS
+/.storybook
+  main.js
+  preview.js
+.gitignore
+package.json
+README.md         # EDIT THIS
+tsconfig.json
+```
+
+#### React Testing Library
+
+We do not set up `react-testing-library` for you yet, we welcome contributions and documentation on this.
+
+### Rollup
+
+TSDX uses [Rollup](https://rollupjs.org) as a bundler and generates multiple rollup configs for various module formats and build settings. See [Optimizations](#optimizations) for details.
+
+### TypeScript
+
+`tsconfig.json` is set up to interpret `dom` and `esnext` types, as well as `react` for `jsx`. Adjust according to your needs.
+
+## Continuous Integration
+
+### GitHub Actions
+
+Two actions are added by default:
+
+- `main` which installs deps w/ cache, lints, tests, and builds on all pushes against a Node and OS matrix
+- `size` which comments cost comparison of your library on every pull request using [size-limit](https://github.com/ai/size-limit)
+
+## Optimizations
+
+Please see the main `tsdx` [optimizations docs](https://github.com/palmerhq/tsdx#optimizations). In particular, know that you can take advantage of development-only optimizations:
+
+```js
+// ./types/index.d.ts
+declare var __DEV__: boolean;
+
+// inside your code...
+if (__DEV__) {
+  console.log('foo');
+}
+```
+
+You can also choose to install and use [invariant](https://github.com/palmerhq/tsdx#invariant) and [warning](https://github.com/palmerhq/tsdx#warning) functions.
+
+## Module Formats
+
+CJS, ESModules, and UMD module formats are supported.
+
+The appropriate paths are configured in `package.json` and `dist/index.js` accordingly. Please report if any issues are found.
+
+## Deploying the Example Playground
+
+The Playground is just a simple [Parcel](https://parceljs.org) app, you can deploy it anywhere you would normally deploy that. Here are some guidelines for **manually** deploying with the Netlify CLI (`npm i -g netlify-cli`):
+
+```bash
+cd example # if not already in the example folder
+npm run build # builds to dist
+netlify deploy # deploy the dist folder
+```
+
+Alternatively, if you already have a git repo connected, you can set up continuous deployment with Netlify:
+
+```bash
+netlify init
+# build command: yarn build && cd example && yarn && yarn build
+# directory to deploy: example/dist
+# pick yes for netlify.toml
+```
+
+## Named Exports
+
+Per Palmer Group guidelines, [always use named exports.](https://github.com/palmerhq/typescript#exports) Code split inside your React app instead of your React library.
+
+## Including Styles
+
+There are many ways to ship styles, including with CSS-in-JS. TSDX has no opinion on this, configure how you like.
+
+For vanilla CSS, you can include it at the root directory and add it to the `files` section in your `package.json`, so that it can be imported separately by your users and run through their bundler's loader.
+
+## Publishing to NPM
+
+We recommend using [np](https://github.com/sindresorhus/np).
+
+## Usage with Lerna
+
+When creating a new package with TSDX within a project set up with Lerna, you might encounter a `Cannot resolve dependency` error when trying to run the `example` project. To fix that you will need to make changes to the `package.json` file _inside the `example` directory_.
+
+The problem is that due to the nature of how dependencies are installed in Lerna projects, the aliases in the example project's `package.json` might not point to the right place, as those dependencies might have been installed in the root of your Lerna project.
+
+Change the `alias` to point to where those packages are actually installed. This depends on the directory structure of your Lerna project, so the actual path might be different from the diff below.
+
+```diff
+   "alias": {
+-    "react": "../node_modules/react",
+-    "react-dom": "../node_modules/react-dom"
++    "react": "../../../node_modules/react",
++    "react-dom": "../../../node_modules/react-dom"
+   },
+```
+
+An alternative to fixing this problem would be to remove aliases altogether and define the dependencies referenced as aliases as dev dependencies instead. [However, that might cause other problems.](https://github.com/palmerhq/tsdx/issues/64)
